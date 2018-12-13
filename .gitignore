@@ -1,0 +1,5 @@
+.venv/
+*__pychare__/
+*.pyc
+*.log
+*.tmp
