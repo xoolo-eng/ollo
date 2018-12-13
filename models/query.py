@@ -8,30 +8,32 @@ class _SetQuery(QueryBase):
 
     def __init__(self, db, collection):
         super().__init__()
-        self.connect = self.bases[db][collection]
+        self.db = db
+        self.collection = collection
+
 
     async def _save_obj(self, **kwargs):
         if kwargs.get("_id"):
             _id = kwargs["_id"]
             del kwargs["_id"]
-            self.connect.replace_one({"_id": _id}, kwargs)
+            self._bases[self.db][self.collection].replace_one({"_id": _id}, kwargs)
             return _id
         else:
-            res = await self.connect.insert_one(kwargs)
+            res = await self._bases[self.db][self.collection].insert_one(kwargs)
             return res.inserted_id
 
     async def _update_obj(self, _id, **kwargs):
-        res = await self.connect.update_one({"_id": _id}, {"$set": kwargs})
+        res = await self._bases[self.db][self.collection].update_one({"_id": _id}, {"$set": kwargs})
         return res.modified_count
 
     async def _delete_obj(self, _id):
-        res = await self.connect.delete_one({"_id": _id})
+        res = await self._bases[self.db][self.collection].delete_one({"_id": _id})
         return res.deleted_count
 
 
 class GetQuery(QueryBase):
 
-    def iscomplex(self, key):
+    def _iscomplex(self, key):
         for pattern in self.patterns:
             if re.match(pattern, key):
                 return True
@@ -40,7 +42,8 @@ class GetQuery(QueryBase):
     def __init__(self, db, collection, model):
         super().__init__()
         self.query = {}
-        self.connect = self.bases[db][collection]
+        self.db = db
+        self.collection = collection
         self.patterns = [
             re.compile("[a-zA-Z0-9]+__lt"),
             re.compile("[a-zA-Z0-9]+__lte"),
@@ -56,25 +59,25 @@ class GetQuery(QueryBase):
     async def get(self, **kwargs):
         if kwargs.get("_id") and isinstance(kwargs["_id"], str):
             kwargs["_id"] = ObjectId(kwargs["_id"])
-        res = await self.connect.find_one(kwargs)
+        res = await self._bases[self.db][self.collection].find_one(kwargs)
         return self.model(**res)
 
     def all(self, *args):
         return CollectionSet(
-            connect=self.connect,
+            connect=self._bases[self.db][self.collection],
             query=self.query,
             model=self.model
         )
 
     def filter(self, **kwargs):
         for key, value in kwargs.items():
-            if self.iscomplex(key):
+            if self._iscomplex(key):
                 key_condition = key.split("__")
                 self.query[key_condition[0]] = {f"${key_condition[1]}": value}
             else:
                 self.query[key] = value
         return CollectionSet(
-            connect=self.connect,
+            connect=self._bases[self.db][self.collection],
             query=self.query,
             model=self.model
         )

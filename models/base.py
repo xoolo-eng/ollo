@@ -9,17 +9,18 @@ class ConnectMeta(type):
 
 
 class QueryBase(metaclass=ConnectMeta):
-    __connections = dict()
-    __bases = dict()
+    _connections = dict()
+    _bases = dict()
 
     @classmethod
     def connect(cls, databases):
         for db in databases.keys():
-            cls.__connections[db] = ma.AsyncIOMotorClient(
+            cls._connections[db] = ma.AsyncIOMotorClient(
                 databases[db]["HOST"],
                 databases[db]["PORT"]
             )
-            cls.__bases[db] = cls.__connections[db][databases[db]["NAME"]]
+            cls._bases[db] = cls._connections[db][databases[db]["NAME"]]
+
 
 from .query import _SetQuery, GetQuery
 

@@ -7,10 +7,13 @@ class Model(metaclass=BaseModel):
         self._fields.add(name)
         self.__dict__[name] = value
 
+    # def __getattr__(self, name):
+    #     return
+
     def __init__(self, *args, **kwargs):
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
-            self.__check_fields()
+            self._check_fields()
 
     def __call__(self, *args, **kwargs):
         for key, value in kwargs.items():
@@ -31,25 +34,26 @@ class Model(metaclass=BaseModel):
         for name in cls._required_fields:
             yield name
 
-    def __check_fields(self):
+    def _check_fields(self):
         fields = set(self._required_fields) & self._fields
         if fields != set(self._required_fields):
             fields = fields ^ set(self._required_fields)
             raise ValueError(f"Fields {list(fields)} not found")
 
     async def save(self):
-        self.__check_fields()
+        self._check_fields()
         result = await self._changes._save_obj(
             **{key: value for key, value in self.__dict__.items() if key in self._fields}
         )
-        self._id = result
+        setattr(self, "_id", result)
         return result
 
     @classmethod
     async def create(cls, **kwargs):
         result = cls()
         result(**kwargs)
-        self._id = await result.save()
+        _id = await result.save()
+        setattr(cls, "_id", _id)
         return result
 
     async def update(self):
@@ -69,11 +73,10 @@ class Model(metaclass=BaseModel):
             del self.__dict__[key]
         del self
 
-    def values(self):
-        element = dict()
-        for key in self._fields:
-            element[key] = getattr(self, key, None)
-        return element
+    def values(self, *args):
+        if len(args) > 0:
+            return {key: getattr(self, key) for key in self._fields if key in args}
+        return {key: getattr(self, key) for key in self._fields}
 
     class Meta:
         abstract = True
