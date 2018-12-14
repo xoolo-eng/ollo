@@ -83,6 +83,7 @@ class GetQuery(QueryBase):
         )
 
     def find(self):
+        """execute arbitrary query"""
         pass
 
 
