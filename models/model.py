@@ -7,10 +7,9 @@ class Model(metaclass=BaseModel):
         self._fields.add(name)
         self.__dict__[name] = value
 
-    # def __getattr__(self, name):
-    #     return
-
     def __init__(self, *args, **kwargs):
+        for obj in Model.__subclasses__():
+            obj._fields = set()
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
             self._check_fields()
@@ -52,8 +51,7 @@ class Model(metaclass=BaseModel):
     async def create(cls, **kwargs):
         result = cls()
         result(**kwargs)
-        _id = await result.save()
-        setattr(cls, "_id", _id)
+        await result.save()
         return result
 
     async def update(self):
@@ -73,9 +71,12 @@ class Model(metaclass=BaseModel):
             del self.__dict__[key]
         del self
 
-    def values(self, *args):
+    def values(self, *args, include=True):
         if len(args) > 0:
-            return {key: getattr(self, key) for key in self._fields if key in args}
+            if include:
+                return {key: getattr(self, key) for key in self._fields if key in args}
+            else:
+                return {key: getattr(self, key) for key in self._fields if key not in args}
         return {key: getattr(self, key) for key in self._fields}
 
     class Meta:

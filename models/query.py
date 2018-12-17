@@ -4,6 +4,9 @@ import asyncio
 from bson.objectid import ObjectId
 
 
+class DoesNotExist(Exception):
+    """Exception"""
+
 class _SetQuery(QueryBase):
 
     def __init__(self, db, collection):
@@ -60,6 +63,8 @@ class GetQuery(QueryBase):
         if kwargs.get("_id") and isinstance(kwargs["_id"], str):
             kwargs["_id"] = ObjectId(kwargs["_id"])
         res = await self._bases[self.db][self.collection].find_one(kwargs)
+        if not res:
+            raise DoesNotExist(f"Object not found.")
         return self.model(**res)
 
     def all(self, *args):
@@ -138,12 +143,12 @@ class CollectionSet():
     async def count(self):
         return await self.connect.count_documents(self.query)
 
-    def json(self):
-        self._json = True
-        return self
-
     async def update(self, new_data):
         await self.connect.update_many(self.query, {"$set": new_data})
 
     async def delete(self):
         await self.connect.delete_many(self.query, {"$set": new_data})
+
+    def json(self):
+        self._json = True
+        return self

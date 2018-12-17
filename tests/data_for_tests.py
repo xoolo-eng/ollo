@@ -448,3 +448,19 @@ test_data = [
         "favoriteFruit": "banana"
     }
 ]
+
+
+update_data = [
+    {
+        "company": "SaM solutions",
+        "email": "dima@sam_solutions.com"
+    },
+    {
+        "company": "Microsoft",
+        "email": "dima@microsoft.com"
+    },
+    {
+        "company": "Canonical",
+        "email": "dima@canonical.com"
+    },
+]
