@@ -120,8 +120,14 @@ class TestChanges(unittest.TestCase):
         self.loop = asyncio.get_event_loop()
         self.data1 = test_data[4]
         self.data2 = test_data[5]
-        self._id1 = None
-        self._id2 = None
+
+        async def _go():
+            obj1 = await Object1.create(**self.data1)
+            self._id1 = obj1._id
+            obj2 = await Object1.create(**self.data2)
+            self._id2 = obj2._id
+
+        self.loop.run_until_complete(_go())
 
     def test_add(self):
 
@@ -129,8 +135,8 @@ class TestChanges(unittest.TestCase):
             obj1 = Object1(**self.data1)
             with self.assertRaises(AttributeError):
                 obj1._id
-            self._id1 = await obj1.save()
-            obj1 = await Object1.query.get(_id=self._id1)
+            _id1 = await obj1.save()
+            obj1 = await Object1.query.get(_id=_id1)
             self.assertEqual(obj1.values("_id", include=False), self.data1)
 
         self.loop.run_until_complete(_go())
@@ -181,7 +187,8 @@ class TestChanges(unittest.TestCase):
                 obj1._id
             with self.assertRaises(AttributeError):
                 obj2._id
-            obj1 = await Object1.query.get(_id=self._id1)
+            with self.assertRaises(Object1.DoesNotExist):
+                obj1 = await Object1.query.get(_id=self._id1)
 
         self.loop.run_until_complete(_go())
 

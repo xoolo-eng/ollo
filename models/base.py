@@ -64,24 +64,19 @@ class BaseModel(type):
             )
 
 
-class BaseDescriptor:
+class Base:
 
     def __init__(self, *args, **kwargs):
         self._null = False
         try:
-            kwargs["blank"]
+            kwargs["null"]
         except KeyError:
             pass
         else:
             if isinstance(kwargs.get("null"), bool):
                 self._null = kwargs.get("null")
             else:
-                raise ValueError("[blank]: expected bool value")
-
-
-class Base:
-
-    def __init__(self):
+                raise ValueError("[null]: expected bool value")
         self.storage_name = None
 
     def __get__(self, instance, owner):
@@ -93,6 +88,14 @@ class Base:
     def __set__(self, instance, value):
         instance.__dict__[self.storage_name] = value
 
+    def _check_type(self, value, data_type, null=False):
+        if null:
+            if not isinstance(value, data_type) or value is not None:
+                raise TypeError(f"Value <{self.storage_name}> must be {data_type} type or None")
+        else:
+            if not isinstance(value, data_type):
+                raise TypeError(f"Value <{self.storage_name}> must be {data_type} type")
+
 
 class Validate(ABC, Base):
 
@@ -103,4 +106,3 @@ class Validate(ABC, Base):
     @abstractmethod
     def validate(self, instance, value):
         """base validate method"""
-

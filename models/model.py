@@ -5,7 +5,9 @@ class Model(metaclass=BaseModel):
 
     def __setattr__(self, name, value):
         self._fields.add(name)
-        self.__dict__[name] = value
+        # self.__dict__[name] = value
+        # setattr(self, name, value)
+        super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
         for obj in Model.__subclasses__():
@@ -54,7 +56,7 @@ class Model(metaclass=BaseModel):
         await result.save()
         return result
 
-    async def update(self):
+    async def update(self, **kwargs):
         try:
             await self._changes._update_obj(self._id, **kwargs)
         except AttributeError:
@@ -62,7 +64,7 @@ class Model(metaclass=BaseModel):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
-    async def delete(self, **kwargs):
+    async def delete(self):
         try:
             await self._changes._delete_obj(self._id)
         except AttributeError:
@@ -81,3 +83,6 @@ class Model(metaclass=BaseModel):
 
     class Meta:
         abstract = True
+
+    class DoesNotExist(Exception):
+        pass

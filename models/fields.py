@@ -1,18 +1,9 @@
-from .base import Validate, BaseDescriptor
+from .base import Validate
 from .utils import isunsignedint
-from datetime import datetime
+from datetime import datetime, date
 
 
-def _check_type(value, data_type, null=False):
-    if null:
-        if not isinstance(value, data_type) or value is not None:
-            raise ValueError(f"Value <{self.storage_name}> must be {data_type} type or None")
-    else:
-        if not isinstance(value, data_type):
-            raise ValueError(f"Value <{self.storage_name}> must be {data_type} type")
-
-
-class StringField(BaseDescriptor, Validate):
+class StringField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -24,14 +15,14 @@ class StringField(BaseDescriptor, Validate):
                 raise ValueError("<max_length>: expected int value greater than zero")
 
     def validate(self, instance, value=None):
-        _check_type(value, str, null=self._null)
+        self._check_type(value, str, null=self._null)
         if self._max_length and value is not None:
             if len(value) > self._max_length:
                 raise ValueError(
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        super().validate(instance, value)
+        return value
 
 
 class SymbolField(StringField):
@@ -45,57 +36,57 @@ class SymbolField(StringField):
         super().__init__(*args, **kwargs)
 
 
-class IntegerField(BaseDescriptor, Validate):
+class IntegerField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        _check_type(value, int, null=self._null)
-        super().validate(instance, value)
+        self._check_type(value, int, null=self._null)
+        return value
 
 
-class FooatField(BaseDescriptor, Validate):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def validate(self, instance, value=None):
-        _check_type(value, float, null=self._null)
-        super().validate(instance, value)
-
-
-class BooleanField(BaseDescriptor, Validate):
+class FooatField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        _check_type(value, bool, null=self._null)
-        super().validate(instance, value)
+        self._check_type(value, float, null=self._null)
+        return value
 
 
-class ArrayField(BaseDescriptor, Validate):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def validate(self, instance, value=None):
-        _check_type(value, list, null=self._null)
-        super().validate(instance, value)
-
-
-class ObjectField(BaseDescriptor, Validate):
+class BooleanField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        _check_type(value, dict, null=self._null)
-        super().validate(instance, value)
+        self._check_type(value, bool, null=self._null)
+        return value
 
 
-class BinaryDataField(BaseDescriptor, Validate):
+class ArrayField(Validate):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def validate(self, instance, value=None):
+        self._check_type(value, list, null=self._null)
+        return value
+
+
+class ObjectField(Validate):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def validate(self, instance, value=None):
+        self._check_type(value, dict, null=self._null)
+        return value
+
+
+class BinaryDataField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -106,17 +97,17 @@ class BinaryDataField(BaseDescriptor, Validate):
                 raise ValueError("<max_length>: expected int value greater than zero")
 
     def validate(self, instance, value=None):
-        _check_type(value, bytes, null=self._null)
+        self._check_type(value, bytes, null=self._null)
         if self._max_length and value is not None:
             if len(value) > self._max_length:
                 raise ValueError(
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        super().validate(instance, value)
+        return value
 
 
-class DateField(BaseDescriptor, Validate):
+class DateField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -129,15 +120,24 @@ class DateField(BaseDescriptor, Validate):
 
     def validate(self, instance, value):
         if self._to_date:
-            value = datetime.datetime(value, self._format).date()
-        _check_type(value, datetime.date, null=self._null)
-        super().validate(instance, value)
+            value = datetime.strptime(value, self._format).date()
+        self._check_type(value, date, null=self._null)
+        return value
 
 
-class DataTimeField(DateField):
+class DataTimeField(Validate):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._to_date = True
+        self._format = "%d-%m-%Y %H:%M:%S"
+        if kwargs.get("to_date"):
+            self._to_date = bool(kwargs["to_date"])
+        if kwargs.get("format"):
+            self._format = kwargs["format"]
 
     def validate(self, instance, value):
         if self._to_date:
-            value = datetime.datetime(value, self._format)
-        _check_type(value, datetime.datetime, null=self._null)
-        super(DateField).validate(instance, value)
+            value = datetime.strptime(value, self._format)
+        self._check_type(value, datetime, null=self._null)
+        return value

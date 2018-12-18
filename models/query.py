@@ -4,9 +4,6 @@ import asyncio
 from bson.objectid import ObjectId
 
 
-class DoesNotExist(Exception):
-    """Exception"""
-
 class _SetQuery(QueryBase):
 
     def __init__(self, db, collection):
@@ -64,7 +61,8 @@ class GetQuery(QueryBase):
             kwargs["_id"] = ObjectId(kwargs["_id"])
         res = await self._bases[self.db][self.collection].find_one(kwargs)
         if not res:
-            raise DoesNotExist(f"Object not found.")
+            raise self.model.DoesNotExist(f"{self.model.__name__} "
+                "matching query does not exist")
         return self.model(**res)
 
     def all(self, *args):
