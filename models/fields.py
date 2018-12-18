@@ -15,14 +15,15 @@ class StringField(Validate):
                 raise ValueError("<max_length>: expected int value greater than zero")
 
     def validate(self, instance, value=None):
-        self._check_type(value, str, null=self._null)
+        self._check_type(value, str)
         if self._max_length and value is not None:
             if len(value) > self._max_length:
                 raise ValueError(
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        return value
+        # return value
+        return self._check_default(value, str)
 
 
 class SymbolField(StringField):
@@ -42,8 +43,9 @@ class IntegerField(Validate):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        self._check_type(value, int, null=self._null)
-        return value
+        self._check_type(value, int)
+        # return value
+        return self._check_default(value, int)
 
 
 class FooatField(Validate):
@@ -52,8 +54,9 @@ class FooatField(Validate):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        self._check_type(value, float, null=self._null)
-        return value
+        self._check_type(value, float)
+        # return value
+        return self._check_default(value, float)
 
 
 class BooleanField(Validate):
@@ -62,8 +65,9 @@ class BooleanField(Validate):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        self._check_type(value, bool, null=self._null)
-        return value
+        self._check_type(value, bool)
+        # return value
+        return self._check_default(value, bool)
 
 
 class ArrayField(Validate):
@@ -72,8 +76,9 @@ class ArrayField(Validate):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        self._check_type(value, list, null=self._null)
-        return value
+        self._check_type(value, list)
+        # return value
+        return self._check_default(value, list)
 
 
 class ObjectField(Validate):
@@ -82,8 +87,9 @@ class ObjectField(Validate):
         super().__init__(*args, **kwargs)
 
     def validate(self, instance, value=None):
-        self._check_type(value, dict, null=self._null)
-        return value
+        self._check_type(value, dict)
+        # return value
+        return self._check_default(value, dict)
 
 
 class BinaryDataField(Validate):
@@ -97,14 +103,15 @@ class BinaryDataField(Validate):
                 raise ValueError("<max_length>: expected int value greater than zero")
 
     def validate(self, instance, value=None):
-        self._check_type(value, bytes, null=self._null)
+        self._check_type(value, bytes)
         if self._max_length and value is not None:
             if len(value) > self._max_length:
                 raise ValueError(
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        return value
+        # return value
+        return self._check_default(value, bytes)
 
 
 class DateField(Validate):
@@ -121,8 +128,9 @@ class DateField(Validate):
     def validate(self, instance, value):
         if self._to_date:
             value = datetime.strptime(value, self._format).date()
-        self._check_type(value, date, null=self._null)
-        return value
+        self._check_type(value, date)
+        # return value
+        return self._check_default(value, date)
 
 
 class DataTimeField(Validate):
@@ -139,5 +147,6 @@ class DataTimeField(Validate):
     def validate(self, instance, value):
         if self._to_date:
             value = datetime.strptime(value, self._format)
-        self._check_type(value, datetime, null=self._null)
-        return value
+        self._check_type(value, datetime)
+        # return value
+        return self._check_default(value, datetime)
