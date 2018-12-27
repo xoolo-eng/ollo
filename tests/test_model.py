@@ -1,10 +1,11 @@
 import unittest
 import asyncio
 from ollo import OLLOConnect
-from models import Object2, Object3, Object4, Object5
+from models import Object2, Object3, Object4, Object5, Object6
 from data_for_tests import test_data
 import copy
 from datetime import datetime
+import os
 
 
 DATABASES = {
@@ -61,6 +62,7 @@ class TestModel(unittest.TestCase):
             obj = Object2(**self.data)
             for key, value in self.data.items():
                 self.assertEqual(getattr(obj, key), value)
+            await obj.save()
 
         self.loop.run_until_complete(_go())
 
@@ -179,6 +181,19 @@ class Test_F_Data(unittest.TestCase):
                 obj.date2,
                 datetime.strptime(self.formats["format"][1], "%Y-%m-%d %H:%M:%S")
             )
+
+        self.loop.run_until_complete(_go())
+
+    def test_file(self):
+        from collections import namedtuple
+
+        async def _go():
+            file = namedtuple("file", ["filename", "file", "content_type"])
+            open_file = open(os.path.abspath("tests/models.py"), "rb")
+            loadfile = file("model.py", open_file, "text")
+            obj = Object6()
+            obj.file = loadfile
+            await obj.save()
 
         self.loop.run_until_complete(_go())
 

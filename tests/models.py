@@ -1,4 +1,5 @@
 from ollo import models
+import os
 
 
 class Object1(models.Model):
@@ -50,6 +51,28 @@ class Object5(models.Model):
 
     date1 = models.DateField(format="%Y-%m-%d")
     date2 = models.DataTimeField(format="%Y-%m-%d %H:%M:%S")
+
+    class Meta:
+        db = "test"
+        collection = "data_test"
+
+
+class Object6(models.Model):
+
+    file = models.FileField(
+        upload_to=os.path.abspath("testfile")
+    )
+
+    class Meta:
+        db = "test"
+        collection = "data_test"
+
+
+class Object7(models.Model):
+
+    ip_v4 = models.IpAddressField()
+    ip_v6 = models.IpAddressField(version="ipv6")
+    email = models.EmailField()
 
     class Meta:
         db = "test"

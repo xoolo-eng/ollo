@@ -1,6 +1,25 @@
 from .base import Validate
 from .utils import isunsignedint
+import os
+import re
+import signal
+import shutil
+import asyncio
+from collections import namedtuple
+from bson.objectid import ObjectId
 from datetime import datetime, date
+from concurrent.futures import ThreadPoolExecutor
+
+
+IPV4 = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}\
+(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
+IPV6 = "(^\d{20}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff:\
+(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})\
+(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})){3}$)|\
+(^((:[a-fA-F0-9]{1,4}){6}|::)ffff(:[a-fA-F0-9]{1,4}){2}$)|\
+(^([a-fA-F0-9]{1,4}) (:[a-fA-F0-9]{1,4}){7}$)|\
+(^:(:[a-fA-F0-9]{1,4}(::)?){1,6}$)|(^((::)?[a-fA-F0-9]{1,4}:){1,6}:$)|(^::$)"
+EMAIL = "^([\w\-\.]+)@((\[([0-9]{1,3}\.){3}[0-9]{1,3}\])|(([\w\-]+\.)+)([a-zA-Z]{2,4}))$"
 
 
 class StringField(Validate):
@@ -22,7 +41,6 @@ class StringField(Validate):
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        # return value
         return self._check_default(value, str)
 
 
@@ -44,7 +62,6 @@ class IntegerField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, int)
-        # return value
         return self._check_default(value, int)
 
 
@@ -55,7 +72,6 @@ class FooatField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, float)
-        # return value
         return self._check_default(value, float)
 
 
@@ -66,7 +82,6 @@ class BooleanField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, bool)
-        # return value
         return self._check_default(value, bool)
 
 
@@ -77,7 +92,6 @@ class ArrayField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, list)
-        # return value
         return self._check_default(value, list)
 
 
@@ -88,7 +102,16 @@ class ObjectField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, dict)
-        # return value
+        return self._check_default(value, dict)
+
+
+class ObjectIdField(Validate):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def validate(self, instance, value=None):
+        self._check_type(value, ObjectId)
         return self._check_default(value, dict)
 
 
@@ -110,7 +133,6 @@ class BinaryDataField(Validate):
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        # return value
         return self._check_default(value, bytes)
 
 
@@ -129,7 +151,6 @@ class DateField(Validate):
         if self._to_date:
             value = datetime.strptime(value, self._format).date()
         self._check_type(value, date)
-        # return value
         return self._check_default(value, date)
 
 
@@ -148,5 +169,87 @@ class DataTimeField(Validate):
         if self._to_date:
             value = datetime.strptime(value, self._format)
         self._check_type(value, datetime)
-        # return value
         return self._check_default(value, datetime)
+
+
+class FileField(Validate):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._upload_to = kwargs["upload_to"]
+        self._filename = kwargs.get("filename")
+
+    def __get__(self, instance, owner):
+        if self._file:
+            def save_file(file, path):
+                result = None
+                with open(path, "wb") as new_file:
+                    result = shutil.copyfileobj(file, new_file, 4096)
+                file.close()
+                return result
+
+            with ThreadPoolExecutor() as executor:
+                executor.submit(
+                    save_file,
+                    self._file,
+                    instance.__dict__[self.storage_name]
+                )
+
+        return super().__get__(instance, owner)
+
+    def validate(self, instance, value):
+        if isinstance(value, str):
+            pass
+        else:
+            try:
+                filename = value.filename
+                self._file = value.file
+                self._content_type = value.content_type
+            except AttributeError:
+                raise ValueError(
+                    f"Value <{self.storage_name}> must be object with "
+                    "fields ('filename', 'file', 'content_type') or "
+                    "string type with full path to file"
+                )
+            if not os.path.isdir(self._upload_to):
+                os.makedirs(self._upload_to)
+            if self._filename:
+                filename = f"{self._filename}.{filename.split('.')[-1]}"
+            value = os.path.join(
+                self._upload_to,
+                filename
+            )
+        return value
+
+
+class EmailField(StringField):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._max_length = None
+        self._pattern = re.compile(EMAIL)
+
+    def validate(self, instance, value):
+        value = super().validate(instance, value)
+        if re.match(self._pattern, value):
+            return value
+        raise ValueError(f"Value <{self.storage_name}> must be ip email address")
+
+
+class IpAddressField(StringField):
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self._version = kwargs.get("version") or "ipv4"
+        if self._version not in ["ipv4", "ipv6"]:
+            raise ValueError("<version>: must be \"ipv4\" or \"ipv6\"")
+        self._max_length = 15 if self._version == "ipv4" else 39
+        self._pattern = re.compile(
+            kwargs.get("pattern") or IPV4 if self._version == "ipv4" else IPV6
+        )
+
+    def validate(self, instance, value):
+        value = super().validate(instance, value)
+        if re.match(self._pattern, value):
+            return value
+        raise ValueError(f"Value <{self.storage_name}> must be ip address")

@@ -1,12 +1,12 @@
 from .base import BaseModel
+import os
+import signal
 
 
 class Model(metaclass=BaseModel):
 
     def __setattr__(self, name, value):
         self._fields.add(name)
-        # self.__dict__[name] = value
-        # setattr(self, name, value)
         super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
@@ -44,7 +44,7 @@ class Model(metaclass=BaseModel):
     async def save(self):
         self._check_fields()
         result = await self._changes._save_obj(
-            **{key: value for key, value in self.__dict__.items() if key in self._fields}
+            **{key: getattr(self, key) for key in self._fields}
         )
         setattr(self, "_id", result)
         return result
@@ -69,8 +69,8 @@ class Model(metaclass=BaseModel):
             await self._changes._delete_obj(self._id)
         except AttributeError:
             raise ArithmeticError("Model cannot be delete without saving.")
-        for key in self._fields:
-            del self.__dict__[key]
+        for name in self._fields:
+            delattr(self, name)
         del self
 
     def values(self, *args, include=True):

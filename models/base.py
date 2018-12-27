@@ -65,7 +65,7 @@ class BaseModel(type):
 
 
 class Base:
-
+    
     def __init__(self, *args, **kwargs):
         self._null = False
         try:
