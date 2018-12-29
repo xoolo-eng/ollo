@@ -11,17 +11,6 @@ from datetime import datetime, date
 from concurrent.futures import ThreadPoolExecutor
 
 
-IPV4 = "^(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}\
-(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$"
-IPV6 = "(^\d{20}$)|(^((:[a-fA-F0-9]{1,4}){6}|::)ffff:\
-(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})\
-(\.(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[0-9]{1,2})){3}$)|\
-(^((:[a-fA-F0-9]{1,4}){6}|::)ffff(:[a-fA-F0-9]{1,4}){2}$)|\
-(^([a-fA-F0-9]{1,4}) (:[a-fA-F0-9]{1,4}){7}$)|\
-(^:(:[a-fA-F0-9]{1,4}(::)?){1,6}$)|(^((::)?[a-fA-F0-9]{1,4}:){1,6}:$)|(^::$)"
-EMAIL = "^([\w\-\.]+)@((\[([0-9]{1,3}\.){3}[0-9]{1,3}\])|(([\w\-]+\.)+)([a-zA-Z]{2,4}))$"
-
-
 class StringField(Validate):
 
     def __init__(self, *args, **kwargs):
@@ -31,7 +20,9 @@ class StringField(Validate):
             if isunsignedint(kwargs.get("max_length")):
                 self._max_length = kwargs["max_length"]
             else:
-                raise ValueError("<max_length>: expected int value greater than zero")
+                raise ValueError(
+                    "<max_length>: expected int value greater than zero"
+                )
 
     def validate(self, instance, value=None):
         self._check_type(value, str)
@@ -223,11 +214,12 @@ class FileField(Validate):
 
 
 class EmailField(StringField):
+    EMAIL = "[-\w.]+@([A-z0-9][-A-z0-9]+\.)?([A-z0-9][-A-z0-9]+\.)+[A-z]{2,6}$"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._max_length = None
-        self._pattern = re.compile(EMAIL)
+        self._pattern = re.compile(self.EMAIL)
 
     def validate(self, instance, value):
         value = super().validate(instance, value)
@@ -237,6 +229,20 @@ class EmailField(StringField):
 
 
 class IpAddressField(StringField):
+    IPV4 = "(?:(?:^|\.)(?:2(?:5[0-5]|\
+[0-4]\d)|1?\d?\d)){4}"
+    IPV6 = "(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|\
+([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|\
+([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|\
+([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|\
+([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|\
+([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|\
+[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|\
+fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}\
+((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|\
+(2[0-4]|1{0,1}[0-9]){0,1}[0-9])|([0-9a-fA-F]{1,4}:){1,4}:\
+((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\.){3,3}(25[0-5]|\
+(2[0-4]|1{0,1}[0-9]){0,1}[0-9]))"
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -245,7 +251,7 @@ class IpAddressField(StringField):
             raise ValueError("<version>: must be \"ipv4\" or \"ipv6\"")
         self._max_length = 15 if self._version == "ipv4" else 39
         self._pattern = re.compile(
-            kwargs.get("pattern") or IPV4 if self._version == "ipv4" else IPV6
+            kwargs.get("pattern") or self.IPV4 if self._version == "ipv4" else self.IPV6
         )
 
     def validate(self, instance, value):

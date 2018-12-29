@@ -36,7 +36,19 @@ class TestAddressEmail(unittest.TestCase):
             obj.ip_v4 = self.data.get("ip_v4")
             obj.ip_v6 = self.data.get("ip_v6")
             obj.email = self.data.get("email")
-            obj.save()
+            await obj.save()
+
+        self.loop.run_until_complete(_go())
+
+    def test_no_valid(self):
+        async def _go():
+            obj = Object7()
+            with self.assertRaises(ValueError):
+                obj.ip_v4 = self.error_data.get("ip_v4")
+            with self.assertRaises(ValueError):
+                obj.ip_v6 = self.error_data.get("ip_v6")
+            with self.assertRaises(ValueError):
+                obj.email = self.error_data.get("email")
 
         self.loop.run_until_complete(_go())
 

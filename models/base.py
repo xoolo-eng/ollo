@@ -51,7 +51,6 @@ class BaseModel(type):
             cls._meta["collection"] = cls.Meta.collection
         except AttributeError:
             cls._meta["collection"] = f"{name}__collection"
-        # cls._fields = set()
         if not cls._meta["abstract"]:
             cls.query = GetQuery(
                 cls._meta["db"],
