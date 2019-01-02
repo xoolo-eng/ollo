@@ -36,9 +36,9 @@ class Model(metaclass=BaseModel):
             yield name
 
     def _check_fields(self):
-        fields = set(self._required_fields) & self._fields
-        if fields != set(self._required_fields):
-            fields = fields ^ set(self._required_fields)
+        fields = self._required_fields & self._fields
+        if fields != self._required_fields:
+            fields = fields ^ self._required_fields
             raise ValueError(f"Fields {list(fields)} not found")
 
     async def save(self):

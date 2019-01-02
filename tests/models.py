@@ -28,7 +28,7 @@ class Object3(models.Model):
 
     index = models.StringField()
     guid = models.IntegerField()
-    isActive = models.DateField()
+    isActive = models.BooleanField()
     name = models.ArrayField()
     tags = models.ObjectField()
 

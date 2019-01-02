@@ -134,7 +134,7 @@ class CollectionSet():
                 else:
                     return cursor.next_object()
             else:
-                raise IndexError
+                raise IndexError(index)
         self.slice = index
         return self
 

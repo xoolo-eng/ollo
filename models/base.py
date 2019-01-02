@@ -29,11 +29,11 @@ class BaseModel(type):
 
     def __init__(cls, name, bases, attr_dict):
         super().__init__(name, bases, attr_dict)
-        cls._required_fields = list()
+        cls._required_fields = set()
         for key, attr in attr_dict.items():
             if isinstance(attr, Validate):
                 attr.storage_name = key
-                cls._required_fields.append(key)
+                cls._required_fields.add(key)
         cls._meta = {
             "db": "default",
             "collection": None,
@@ -91,10 +91,15 @@ class Base:
     def _check_type(self, value, data_type):
         if self._null:
             if not isinstance(value, data_type) or value is not None:
-                raise TypeError(f"Value <{self.storage_name}> must be {data_type} type or None")
+                raise TypeError(
+                    f"Value <{self.storage_name}> must be "
+                    f"{data_type} type or None"
+                )
         else:
             if not isinstance(value, data_type):
-                raise TypeError(f"Value <{self.storage_name}> must be {data_type} type")
+                raise TypeError(
+                    f"Value <{self.storage_name}> must be {data_type} type"
+                )
 
     def _check_default(self, value, data_type):
         if self._default and not isinstance(self._defa, data_type):
