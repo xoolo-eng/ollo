@@ -1,4 +1,5 @@
 from ollo.models import FileField as _FF
+from ollo.models.base import FieldError
 
 
 class FileField(_FF):
@@ -12,7 +13,7 @@ class FileField(_FF):
             _ = value.file
             _ = value.content_type
         except AttributeError:
-            raise ValueError(
+            raise FieldError(
                 f"Value <{self.storage_name}> must be object with "
                 "fields ('filename', 'file', 'content_type')"
             )

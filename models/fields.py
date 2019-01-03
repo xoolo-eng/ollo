@@ -1,4 +1,4 @@
-from .base import Validate
+from .base import Validate, FieldError
 from .utils import isunsignedint
 import os
 import re
@@ -28,7 +28,7 @@ class StringField(Validate):
         self._check_type(value, str)
         if self._max_length and value is not None:
             if len(value) > self._max_length:
-                raise ValueError(
+                raise FieldError(
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
@@ -120,7 +120,7 @@ class BinaryDataField(Validate):
         self._check_type(value, bytes)
         if self._max_length and value is not None:
             if len(value) > self._max_length:
-                raise ValueError(
+                raise FieldError(
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
@@ -197,7 +197,7 @@ class FileField(Validate):
                 self._file = value.file
                 self._content_type = value.content_type
             except AttributeError:
-                raise ValueError(
+                raise FieldError(
                     f"Value <{self.storage_name}> must be object with "
                     "fields ('filename', 'file', 'content_type') or "
                     "string type with full path to file"
@@ -225,7 +225,7 @@ class EmailField(StringField):
         value = super().validate(instance, value)
         if re.match(self._pattern, value):
             return value
-        raise ValueError(f"Value <{self.storage_name}> must be ip email address")
+        raise FieldError(f"Value <{self.storage_name}> must be ip email address")
 
 
 class IpAddressField(StringField):
@@ -258,4 +258,4 @@ fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}\
         value = super().validate(instance, value)
         if re.match(self._pattern, value):
             return value
-        raise ValueError(f"Value <{self.storage_name}> must be ip address")
+        raise FieldError(f"Value <{self.storage_name}> must be ip address")

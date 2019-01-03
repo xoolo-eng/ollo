@@ -19,7 +19,7 @@ class Model(metaclass=BaseModel):
     def __call__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-            self._fields.add(key)
+            # self._fields.add(key)
 
     def __str__(self):
         element = dict()

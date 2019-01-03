@@ -145,7 +145,7 @@ class CollectionSet():
         await self.connect.update_many(self.query, {"$set": new_data})
 
     async def delete(self):
-        await self.connect.delete_many(self.query, {"$set": new_data})
+        await self.connect.delete_many(self.query)
 
     def json(self):
         self._json = True

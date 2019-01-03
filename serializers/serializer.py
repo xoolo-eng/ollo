@@ -1,4 +1,5 @@
 from .base import BaseSerializer
+from ollo.models.base import FieldError
 from copy import deepcopy
 
 
@@ -7,13 +8,16 @@ class Serializer(metaclass=BaseSerializer):
     class ValidateError(Exception):
         pass
 
+    def __setattr__(self, name, value):
+        self._fields.add(name)
+        super().__setattr__(name, value)
+
     def __init__(self, *args, **kwargs):
         for cls in Serializer.__subclasses__():
             cls._fields = set()
         for arg in args:
             for key, value in arg.items():
                 setattr(self, key, value)
-                self._fields.add(key)
 
     def _check_fields(self):
         fields = self._required_fields & self._fields
@@ -33,7 +37,7 @@ class Serializer(metaclass=BaseSerializer):
 
     async def is_valid(self):
         self._check_fields()
-        self.errors = dict()
+        self.__dict__["errors"] = dict()
         validate_funcs = dict()
         for key in self._fields:
             try:
@@ -45,6 +49,8 @@ class Serializer(metaclass=BaseSerializer):
                 await validate_funcs[key](getattr(self, key))
             except self.ValidateError as e:
                 self.errors[key] = str(e)
+            except FieldError as e:
+                self.errors[key] = str(e)
         try:
             await self.validate(
                 {key: getattr(self, key) for key in self._fields}
@@ -52,6 +58,8 @@ class Serializer(metaclass=BaseSerializer):
         except AttributeError:
             pass
         except self.ValidateError as e:
+            self.errors["non_field"] = str(e)
+        except FieldError as e:
             self.errors["non_field"] = str(e)
         if len(self.errors):
             return False
@@ -68,16 +76,23 @@ class ModelSerializer(Serializer):
     ALL_FIELDS = "__all__"
 
     def __init__(self, *args, **kwargs):
-        for cls in ModelSerializer.__subclasses__():
-            if hasattr(cls, "Meta"):
-                fields = list()
-                if cls.Meta.fields == self.ALL_FIELDS:
-                    fields = list(cls.Meta.model.field_names())
+        if hasattr(self, "Meta"):
+            fields = list(self.Meta.model.field_names())
+            if hasattr(self.Meta, "fields"):
+                if self.Meta.fields == self.ALL_FIELDS:
+                    fields = list(self.Meta.model.field_names())
                 else:
-                    fields = list(cls.Meta.fields)
-                for field in fields:
-                    obj = type(getattr(cls.Meta.model, field))
-                    obj.storage_name = field
-                    setattr(cls, field, obj())
-                    cls._required_fields.add(field)
+                    fields = list(self.Meta.fields)
+            if hasattr(self.Meta, "exclude"):
+                exclude = list(self.Meta.exclude)
+                for element in exclude:
+                    fields.remove(element)
+            for field in fields:
+                obj = type(getattr(self.Meta.model, field))
+                obj.storage_name = field
+                self.__dict__["field"] = obj()
+                self._required_fields.add(field)
         super().__init__(*args, **kwargs)
+
+    async def save(self):
+        return await self.Meta.model.create(**self.data())
