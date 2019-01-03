@@ -9,7 +9,7 @@ from ollo.models.fields import (
     ObjectIdField,
     BinaryDataField,
     DateField,
-    DataTimeField,
+    DateTimeField,
     EmailField,
     IpAddressField
 )

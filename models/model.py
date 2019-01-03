@@ -36,15 +36,18 @@ class Model(metaclass=BaseModel):
             yield name
 
     def _check_fields(self):
-        fields = self._required_fields & self._fields
-        if fields != self._required_fields:
+        fields = (self._required_fields ^ self._default_fields) & self._fields
+        if fields != (self._required_fields ^ self._default_fields):
             fields = fields ^ self._required_fields
             raise ValueError(f"Fields {list(fields)} not found")
 
     async def save(self):
         self._check_fields()
         result = await self._changes._save_obj(
-            **{key: getattr(self, key) for key in self._fields}
+            **{
+                key: getattr(self, key) \
+                for key in (self._fields | self._default_fields)
+            }
         )
         setattr(self, "_id", result)
         return result
@@ -76,9 +79,15 @@ class Model(metaclass=BaseModel):
     def values(self, *args, include=True):
         if len(args) > 0:
             if include:
-                return {key: getattr(self, key) for key in self._fields if key in args}
+                return {
+                    key: getattr(self, key) \
+                    for key in self._fields if key in args
+                }
             else:
-                return {key: getattr(self, key) for key in self._fields if key not in args}
+                return {
+                    key: getattr(self, key) \
+                    for key in self._fields if key not in args
+                }
         return {key: getattr(self, key) for key in self._fields}
 
     class Meta:

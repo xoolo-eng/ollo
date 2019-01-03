@@ -40,7 +40,7 @@ class Object3(models.Model):
 class Object4(models.Model):
 
     date1 = models.DateField()
-    date2 = models.DataTimeField()
+    date2 = models.DateTimeField()
 
     class Meta:
         db = "test"
@@ -50,7 +50,7 @@ class Object4(models.Model):
 class Object5(models.Model):
 
     date1 = models.DateField(format="%Y-%m-%d")
-    date2 = models.DataTimeField(format="%Y-%m-%d %H:%M:%S")
+    date2 = models.DateTimeField(format="%Y-%m-%d %H:%M:%S")
 
     class Meta:
         db = "test"

@@ -32,7 +32,7 @@ class StringField(Validate):
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        return self._check_default(value, str)
+        return value
 
 
 class SymbolField(StringField):
@@ -53,7 +53,7 @@ class IntegerField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, int)
-        return self._check_default(value, int)
+        return value
 
 
 class FooatField(Validate):
@@ -63,7 +63,7 @@ class FooatField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, float)
-        return self._check_default(value, float)
+        return value
 
 
 class BooleanField(Validate):
@@ -73,7 +73,7 @@ class BooleanField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, bool)
-        return self._check_default(value, bool)
+        return value
 
 
 class ArrayField(Validate):
@@ -83,7 +83,7 @@ class ArrayField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, list)
-        return self._check_default(value, list)
+        return value
 
 
 class ObjectField(Validate):
@@ -93,7 +93,7 @@ class ObjectField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, dict)
-        return self._check_default(value, dict)
+        return value
 
 
 class ObjectIdField(Validate):
@@ -103,7 +103,7 @@ class ObjectIdField(Validate):
 
     def validate(self, instance, value=None):
         self._check_type(value, ObjectId)
-        return self._check_default(value, dict)
+        return value
 
 
 class BinaryDataField(Validate):
@@ -124,7 +124,7 @@ class BinaryDataField(Validate):
                     f"Length of value <{self.storage_name}> "
                     "mast be in range (0 < value <= max_length)"
                 )
-        return self._check_default(value, bytes)
+        return value
 
 
 class DateField(Validate):
@@ -138,14 +138,14 @@ class DateField(Validate):
         if kwargs.get("format"):
             self._format = kwargs["format"]
 
-    def validate(self, instance, value):
+    def validate(self, instance, value=None):
         if self._to_date:
             value = datetime.strptime(value, self._format).date()
         self._check_type(value, date)
-        return self._check_default(value, date)
+        return value
 
 
-class DataTimeField(Validate):
+class DateTimeField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -156,11 +156,11 @@ class DataTimeField(Validate):
         if kwargs.get("format"):
             self._format = kwargs["format"]
 
-    def validate(self, instance, value):
+    def validate(self, instance, value=None):
         if self._to_date:
             value = datetime.strptime(value, self._format)
         self._check_type(value, datetime)
-        return self._check_default(value, datetime)
+        return value
 
 
 class FileField(Validate):
@@ -169,6 +169,7 @@ class FileField(Validate):
         super().__init__(*args, **kwargs)
         self._upload_to = kwargs["upload_to"]
         self._filename = kwargs.get("filename")
+        self._file = None
 
     def __get__(self, instance, owner):
         if self._file:
@@ -188,28 +189,29 @@ class FileField(Validate):
 
         return super().__get__(instance, owner)
 
-    def validate(self, instance, value):
-        if isinstance(value, str):
-            pass
-        else:
-            try:
-                filename = value.filename
-                self._file = value.file
-                self._content_type = value.content_type
-            except AttributeError:
-                raise FieldError(
-                    f"Value <{self.storage_name}> must be object with "
-                    "fields ('filename', 'file', 'content_type') or "
-                    "string type with full path to file"
+    def validate(self, instance, value=None):
+        if not self._null:
+            if isinstance(value, str):
+                pass
+            else:
+                try:
+                    filename = value.filename
+                    self._file = value.file
+                    self._content_type = value.content_type
+                except AttributeError:
+                    raise FieldError(
+                        f"Value <{self.storage_name}> must be object with "
+                        "fields ('filename', 'file', 'content_type') or "
+                        "string type with full path to file"
+                    )
+                if not os.path.isdir(self._upload_to):
+                    os.makedirs(self._upload_to)
+                if self._filename:
+                    filename = f"{self._filename}.{filename.split('.')[-1]}"
+                value = os.path.join(
+                    self._upload_to,
+                    filename
                 )
-            if not os.path.isdir(self._upload_to):
-                os.makedirs(self._upload_to)
-            if self._filename:
-                filename = f"{self._filename}.{filename.split('.')[-1]}"
-            value = os.path.join(
-                self._upload_to,
-                filename
-            )
         return value
 
 
@@ -221,7 +223,7 @@ class EmailField(StringField):
         self._max_length = None
         self._pattern = re.compile(self.EMAIL)
 
-    def validate(self, instance, value):
+    def validate(self, instance, value=None):
         value = super().validate(instance, value)
         if re.match(self._pattern, value):
             return value
@@ -254,7 +256,7 @@ fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}\
             kwargs.get("pattern") or self.IPV4 if self._version == "ipv4" else self.IPV6
         )
 
-    def validate(self, instance, value):
+    def validate(self, instance, value=None):
         value = super().validate(instance, value)
         if re.match(self._pattern, value):
             return value

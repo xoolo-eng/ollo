@@ -41,7 +41,6 @@ class GetQuery(QueryBase):
 
     def __init__(self, db, collection, model):
         super().__init__()
-        self.query = {}
         self.db = db
         self.collection = collection
         self.patterns = [
@@ -59,7 +58,9 @@ class GetQuery(QueryBase):
     async def get(self, **kwargs):
         if kwargs.get("_id") and isinstance(kwargs["_id"], str):
             kwargs["_id"] = ObjectId(kwargs["_id"])
-        res = await self._bases[self.db][self.collection].find_one(kwargs)
+        query = dict()
+        query = self._parse_query(kwargs)
+        res = await self._bases[self.db][self.collection].find_one(query)
         if not res:
             raise self.model.DoesNotExist(f"{self.model.__name__} "
                 "matching query does not exist")
@@ -68,22 +69,40 @@ class GetQuery(QueryBase):
     def all(self, *args):
         return CollectionSet(
             connect=self._bases[self.db][self.collection],
-            query=self.query,
+            query={},
             model=self.model
         )
 
     def filter(self, **kwargs):
-        for key, value in kwargs.items():
-            if self._iscomplex(key):
-                key_condition = key.split("__")
-                self.query[key_condition[0]] = {f"${key_condition[1]}": value}
-            else:
-                self.query[key] = value
+        query = dict()
+        query = self._parse_query(kwargs)
         return CollectionSet(
             connect=self._bases[self.db][self.collection],
-            query=self.query,
+            query=query,
             model=self.model
         )
+
+    def _parse_query(self, obj):
+        query = dict()
+        for key, value in obj.items():
+            if self._iscomplex(key):
+                key_condition = key.split("__")
+                if isinstance(value, dict):
+                    for sub_key, sub_value in value.items():
+                        query[f"{key_condition[0]}.{sub_key}"] = {
+                            f"${key_condition[1]}": sub_value
+                        }
+                else:
+                    query[key_condition[0]] = {
+                        f"${key_condition[1]}": value
+                    }
+            else:
+                if isinstance(value, dict):
+                    for sub_key, sub_value in value.items():
+                        query[f"{key}.{sub_key}"] = sub_value
+                else:
+                    query[key] = value
+        return query
 
     def find(self):
         """execute arbitrary query"""

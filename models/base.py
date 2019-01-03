@@ -34,11 +34,13 @@ class BaseModel(type):
     def __init__(cls, name, bases, attr_dict):
         super().__init__(name, bases, attr_dict)
         cls._required_fields = set()
+        cls._default_fields = set()
         for key, attr in attr_dict.items():
             if isinstance(attr, Validate):
                 attr.storage_name = key
-                if not hasattr(attr, "_default"):
-                    cls._required_fields.add(key)
+                cls._required_fields.add(key)
+                if hasattr(attr, "_default") and attr._default is not None:
+                    cls._default_fields.add(key)
         cls._meta = {
             "db": "default",
             "collection": None,
@@ -81,14 +83,20 @@ class Base:
                 self._null = kwargs.get("null")
             else:
                 raise ValueError("[null]: expected bool value")
-        self._default = kwargs.get("default")
+        try:
+            self._default = kwargs["default"]
+        except KeyError:
+            pass
         self.storage_name = None
 
     def __get__(self, instance, owner):
         if not instance:
             return self
         else:
-            return instance.__dict__[self.storage_name]
+            try:
+                return instance.__dict__[self.storage_name]
+            except KeyError:
+                return self._default
 
     def __set__(self, instance, value):
         instance.__dict__[self.storage_name] = value
@@ -107,12 +115,13 @@ class Base:
                     f"Value <{self.storage_name}> must be {data_type} type"
                 )
 
-    def _check_default(self, value, data_type):
-        if self._default and not isinstance(self._default, data_type):
-            raise TypeError("Value for default not valid.")
-        elif self._default and value is None:
-            return self._default
-        return value
+    # def _check_default(self, value, data_type):
+    #     if self._default is not None and \
+    #             not isinstance(self._default, data_type):
+    #         raise TypeError("Value for default not valid.")
+    #     elif self._default is not None and value is None:
+    #         return self._default
+    #     return value
 
 
 class Validate(ABC, Base):

@@ -58,9 +58,11 @@ class Serializer(metaclass=BaseSerializer):
         except AttributeError:
             pass
         except self.ValidateError as e:
-            self.errors["non_field"] = str(e)
+            if str(e):
+                self.errors["non_field"] = str(e)
         except FieldError as e:
-            self.errors["non_field"] = str(e)
+            if str(e):
+                self.errors["non_field"] = str(e)
         if len(self.errors):
             return False
         return True
