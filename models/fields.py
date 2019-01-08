@@ -9,6 +9,9 @@ from collections import namedtuple
 from bson.objectid import ObjectId
 from datetime import datetime, date
 from concurrent.futures import ThreadPoolExecutor
+# start event
+# from .model import Model
+# end event
 
 
 class StringField(Validate):
@@ -23,6 +26,9 @@ class StringField(Validate):
                 raise ValueError(
                     "<max_length>: expected int value greater than zero"
                 )
+# start event
+        # Model.register(self)
+# end event
 
     def validate(self, instance, value=None):
         self._check_type(value, str)
@@ -33,6 +39,11 @@ class StringField(Validate):
                     "mast be in range (0 < value <= max_length)"
                 )
         return value
+# start event
+    # def update(self, message):
+    #     print(message)
+# end event
+
 
 
 class SymbolField(StringField):

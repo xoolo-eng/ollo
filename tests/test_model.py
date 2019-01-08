@@ -6,6 +6,7 @@ from data_for_tests import test_data
 import copy
 from datetime import datetime
 import os
+from ollo.models import FieldError
 
 
 DATABASES = {
@@ -41,7 +42,7 @@ class TestModel(unittest.TestCase):
             del data[self.list_fields[0]]
             obj = Object2()
             obj(**data)
-            with self.assertRaises(ValueError):
+            with self.assertRaises(FieldError):
                 await obj.save()
 
         self.loop.run_until_complete(_go())
@@ -93,7 +94,7 @@ class TestDate(unittest.TestCase):
         async def _go():
             for key in self.formats["date"]:
                 obj = Object4()
-                with self.assertRaises(ValueError):
+                with self.assertRaises(FieldError):
                     obj.date1 = key
 
         self.loop.run_until_complete(_go())
@@ -103,7 +104,7 @@ class TestDate(unittest.TestCase):
         async def _go():
             for key in self.formats["datetime"]:
                 obj = Object4()
-                with self.assertRaises(ValueError):
+                with self.assertRaises(FieldError):
                     obj.date2 = key
 
         self.loop.run_until_complete(_go())
@@ -152,7 +153,7 @@ class Test_F_Data(unittest.TestCase):
         async def _go():
             for key in self.formats["date"]:
                 obj = Object5()
-                with self.assertRaises(ValueError):
+                with self.assertRaises(FieldError):
                     obj.date1 = key
 
         self.loop.run_until_complete(_go())
@@ -162,7 +163,7 @@ class Test_F_Data(unittest.TestCase):
         async def _go():
             for key in self.formats["datetime"]:
                 obj = Object5()
-                with self.assertRaises(ValueError):
+                with self.assertRaises(FieldError):
                     obj.date2 = key
 
         self.loop.run_until_complete(_go())

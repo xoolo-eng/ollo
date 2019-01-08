@@ -1,13 +1,13 @@
 from .base import BaseModel
 import os
-import signal
+from ollo.events import Event
 
 
 class Model(metaclass=BaseModel):
 
-    def __setattr__(self, name, value):
-        self._fields.add(name)
-        super().__setattr__(name, value)
+    # def __setattr__(self, name, value):
+    #     self._fields.add(name)
+    #     super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
         for obj in Model.__subclasses__():
@@ -15,11 +15,35 @@ class Model(metaclass=BaseModel):
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
             self._check_fields()
+# start events ################################
+    # observers = list()
 
+    # @classmethod
+    # def register(cls, observer):
+    #     cls.observers.append(observer)
+
+    # def notify_observers(self, message):
+    #     for observer in self.observers:
+    #         observer.update(message)
+# end events ##################################
     def __call__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-            # self._fields.add(key)
+            self._fields.add(key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+        self._fields.add(key)
+
+    def __getitem__(self, key):
+        if not isinstance(key, str):
+            raise TypeError("Object does not support indexing")
+        elif key in self._fields:
+            try:
+                return getattr(self, key)
+            except AttributeError:
+                pass
+        raise KeyError(key)
 
     def __str__(self):
         element = dict()
@@ -49,6 +73,9 @@ class Model(metaclass=BaseModel):
                 for key in (self._fields | self._default_fields)
             }
         )
+# start event
+        # self.notify_observers("SAVE!!!")
+# end event
         setattr(self, "_id", result)
         return result
 

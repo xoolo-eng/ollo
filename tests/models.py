@@ -60,7 +60,7 @@ class Object5(models.Model):
 class Object6(models.Model):
 
     file = models.FileField(
-        upload_to=os.path.abspath("testfile")
+        upload_to=os.path.abspath("tests.testfiles")
     )
 
     class Meta:

@@ -8,9 +8,9 @@ class Serializer(metaclass=BaseSerializer):
     class ValidateError(Exception):
         pass
 
-    def __setattr__(self, name, value):
-        self._fields.add(name)
-        super().__setattr__(name, value)
+    # def __setattr__(self, name, value):
+    #     self._fields.add(name)
+    #     super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
         for cls in Serializer.__subclasses__():
@@ -18,6 +18,7 @@ class Serializer(metaclass=BaseSerializer):
         for arg in args:
             for key, value in arg.items():
                 setattr(self, key, value)
+                self._fields.add(name)
 
     def _check_fields(self):
         fields = self._required_fields & self._fields
@@ -26,18 +27,22 @@ class Serializer(metaclass=BaseSerializer):
             raise ValueError(f"Fields {list(fields)} not found")
 
     def __getitem__(self, key):
-        if isinstance(key, int):
+        if not isinstance(key, str):
             raise TypeError("Object does not support indexing")
-        if isinstance(key, str):
+        elif key in self._fields:
             try:
                 return getattr(self, key)
             except AttributeError:
-                raise KeyError(key)
-        raise TypeError(key)
+                pass
+        raise KeyError(key)
+
+    def __setitem__(self, key, value):
+        setattr(self, key, value)
+        self._fields.add(key)
 
     async def is_valid(self):
         self._check_fields()
-        self.__dict__["errors"] = dict()
+        self.errors = dict()
         validate_funcs = dict()
         for key in self._fields:
             try:
