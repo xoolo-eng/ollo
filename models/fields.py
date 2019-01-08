@@ -9,9 +9,7 @@ from collections import namedtuple
 from bson.objectid import ObjectId
 from datetime import datetime, date
 from concurrent.futures import ThreadPoolExecutor
-# start event
-# from .model import Model
-# end event
+from ollo import events
 
 
 class StringField(Validate):
@@ -26,9 +24,6 @@ class StringField(Validate):
                 raise ValueError(
                     "<max_length>: expected int value greater than zero"
                 )
-# start event
-        # Model.register(self)
-# end event
 
     def validate(self, instance, value=None):
         self._check_type(value, str)
@@ -39,11 +34,6 @@ class StringField(Validate):
                     "mast be in range (0 < value <= max_length)"
                 )
         return value
-# start event
-    # def update(self, message):
-    #     print(message)
-# end event
-
 
 
 class SymbolField(StringField):
@@ -151,7 +141,10 @@ class DateField(Validate):
 
     def validate(self, instance, value=None):
         if self._to_date:
-            value = datetime.strptime(value, self._format).date()
+            try:
+                value = datetime.strptime(value, self._format).date()
+            except ValueError as e:
+                raise FieldError(e)
         self._check_type(value, date)
         return value
 
@@ -169,7 +162,10 @@ class DateTimeField(Validate):
 
     def validate(self, instance, value=None):
         if self._to_date:
-            value = datetime.strptime(value, self._format)
+            try:
+                value = datetime.strptime(value, self._format)
+            except ValueError as e:
+                raise FieldError(e)
         self._check_type(value, datetime)
         return value
 
@@ -181,12 +177,16 @@ class FileField(Validate):
         self._upload_to = kwargs["upload_to"]
         self._filename = kwargs.get("filename")
         self._file = None
+        events.Event(name=events.M_SAVE, callback=self._save)
 
-    def __get__(self, instance, owner):
+    # def __get__(self, instance, owner):
+    #     return super().__get__(instance, owner)
+
+    def _save(self, *args, **kwargs):
         if self._file:
-            def save_file(file, path):
+            def save_file(file, path, name):
                 result = None
-                with open(path, "wb") as new_file:
+                with open(os.path.join(path, name), "wb") as new_file:
                     result = shutil.copyfileobj(file, new_file, 4096)
                 file.close()
                 return result
@@ -195,10 +195,9 @@ class FileField(Validate):
                 executor.submit(
                     save_file,
                     self._file,
-                    instance.__dict__[self.storage_name]
+                    self._upload_to,
+                    self._filename or self._file.name.split("/")[-1]
                 )
-
-        return super().__get__(instance, owner)
 
     def validate(self, instance, value=None):
         if not self._null:

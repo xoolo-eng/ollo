@@ -27,19 +27,21 @@ class Event(object):
 
             def _executor(*args, **kwargs):
                 if post:
-                    funck(*args, **kwargs)
+                    result = funck(*args, **kwargs)
                     self.occurence(name, *args, **kwargs)
+                    return result
                 else:
                     self.occurence(name, *args, **kwargs)
-                    funck(*args, **kwargs)
+                    return funck(*args, **kwargs)
 
             async def _async_executor(*args, **kwargs):
                 if post:
-                    await funck(*args, **kwargs)
+                    result = await funck(*args, **kwargs)
                     self.occurence(name, *args, **kwargs)
+                    return result
                 else:
                     self.occurence(name, *args, **kwargs)
-                    await funck(*args, **kwargs)
+                    return (await funck(*args, **kwargs))
 
             if asynchron:
                 return _async_executor

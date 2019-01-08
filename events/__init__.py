@@ -1,15 +1,16 @@
 from .event import Event
 
+
 # M_ - MODEL
 M_SAVE = "event_0"
-M_PRESAVE = "event_1"
-M_POSTSAVE = "event_2"
+# M_PRESAVE = "event_1"
+# M_POSTSAVE = "event_2"
 M_DELETE = "event_3"
-M_PREDELETE = "event_4"
-M_POSTDELETE = "event_5"
+# M_PREDELETE = "event_4"
+# M_POSTDELETE = "event_5"
 M_UPDATE = "event_6"
-M_PREUPDATE = "event_7"
-M_POSTUPDATE = "event_8"
+# M_PREUPDATE = "event_7"
+# M_POSTUPDATE = "event_8"
 
 # H_ - HTTP
 H_OPTIONS = "event_9"

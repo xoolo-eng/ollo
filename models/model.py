@@ -1,13 +1,14 @@
 from .base import BaseModel
 import os
-from ollo.events import Event
+from ollo import events
 
 
 class Model(metaclass=BaseModel):
 
-    # def __setattr__(self, name, value):
-    #     self._fields.add(name)
-    #     super().__setattr__(name, value)
+    def __setattr__(self, name, value):
+        if name in self._required_fields:
+            self._fields.add(name)
+        super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
         for obj in Model.__subclasses__():
@@ -15,17 +16,7 @@ class Model(metaclass=BaseModel):
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
             self._check_fields()
-# start events ################################
-    # observers = list()
 
-    # @classmethod
-    # def register(cls, observer):
-    #     cls.observers.append(observer)
-
-    # def notify_observers(self, message):
-    #     for observer in self.observers:
-    #         observer.update(message)
-# end events ##################################
     def __call__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
@@ -65,17 +56,16 @@ class Model(metaclass=BaseModel):
             fields = fields ^ self._required_fields
             raise ValueError(f"Fields {list(fields)} not found")
 
+    @events.Event.origin(events.M_SAVE)
     async def save(self):
         self._check_fields()
+        # events.Event.occurence(events.M_SAVE)
         result = await self._changes._save_obj(
             **{
                 key: getattr(self, key) \
                 for key in (self._fields | self._default_fields)
             }
         )
-# start event
-        # self.notify_observers("SAVE!!!")
-# end event
         setattr(self, "_id", result)
         return result
 
