@@ -11,8 +11,9 @@ class Model(metaclass=BaseModel):
         super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
-        for obj in Model.__subclasses__():
-            obj._fields = set()
+        # for obj in Model.__subclasses__():
+            # obj._fields = set()
+        self._fields = set()
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
             self._check_fields()
@@ -20,7 +21,7 @@ class Model(metaclass=BaseModel):
     def __call__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-            self._fields.add(key)
+            # self._fields.add(key)
 
     def __setitem__(self, key, value):
         setattr(self, key, value)
@@ -59,7 +60,6 @@ class Model(metaclass=BaseModel):
     @events.Event.origin(events.M_SAVE)
     async def save(self):
         self._check_fields()
-        # events.Event.occurence(events.M_SAVE)
         result = await self._changes._save_obj(
             **{
                 key: getattr(self, key) \

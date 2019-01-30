@@ -1,5 +1,4 @@
 from .base import BaseSerializer
-from ollo.models.base import FieldError
 from copy import deepcopy
 
 
@@ -13,12 +12,13 @@ class Serializer(metaclass=BaseSerializer):
     #     super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
-        for cls in Serializer.__subclasses__():
-            cls._fields = set()
+        # for cls in Serializer.__subclasses__():
+            # cls._fields = set()
+        self._fields = set()
         for arg in args:
             for key, value in arg.items():
                 setattr(self, key, value)
-                self._fields.add(name)
+                self._fields.add(key)
 
     def _check_fields(self):
         fields = self._required_fields & self._fields
@@ -54,8 +54,6 @@ class Serializer(metaclass=BaseSerializer):
                 await validate_funcs[key](getattr(self, key))
             except self.ValidateError as e:
                 self.errors[key] = str(e)
-            except FieldError as e:
-                self.errors[key] = str(e)
         try:
             await self.validate(
                 {key: getattr(self, key) for key in self._fields}
@@ -63,9 +61,6 @@ class Serializer(metaclass=BaseSerializer):
         except AttributeError:
             pass
         except self.ValidateError as e:
-            if str(e):
-                self.errors["non_field"] = str(e)
-        except FieldError as e:
             if str(e):
                 self.errors["non_field"] = str(e)
         if len(self.errors):

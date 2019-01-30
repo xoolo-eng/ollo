@@ -66,7 +66,7 @@ class GetQuery(QueryBase):
                 "matching query does not exist")
         return self.model(**res)
 
-    def all(self, *args):
+    def all(self, **kwargs):
         return CollectionSet(
             connect=self._bases[self.db][self.collection],
             query={},
@@ -114,27 +114,28 @@ class CollectionSet():
     def __init__(self, *args, **kwargs):
         self._json = False
         self._bson = True
-        self.connect = kwargs.get("connect")
-        self.query = kwargs.get("query")
-        self.model = kwargs.get("model")
-        self.counter = 0
-        self.slice = None
+        self._connect = kwargs.get("connect")
+        self._query = kwargs.get("query")
+        self._model = kwargs.get("model")
+        self._slice = None
+        self._sort = ("_id", -1)
 
     def __aiter__(self):
-        if not self.slice:
-            self.cursor = self.connect.find(self.query)
+        if self._slice is None:
+            self.cursor = self._connect.find(self._query).sort(*self._sort)
         else:
-            self.cursor = self.connect.find(
-                self.query).skip(
-                self.slice.start).limit(
-                self.slice.stop)
+            self.cursor = self._connect.find(
+                self._query).sort(*self._sort).skip(
+                self._slice.start).limit(
+                self._slice.stop - self._slice.start
+            )
         return self
 
     async def __anext__(self):
         result = await self.cursor.fetch_next
         if result:
             if not self._json:
-                return self.model(**self.cursor.next_object())
+                return self._model(**self.cursor.next_object())
             else:
                 return self.cursor.next_object()
         else:
@@ -143,28 +144,43 @@ class CollectionSet():
     def __repr__(self):
         return "CollectionSet([<object>, <object>, ...])"
 
-    async def __getitem__(self, index):
+    def __getitem__(self, index):
         if isinstance(index, int):
-            cursor = self.connect.find(self.query).skip(index).limit(1)
-            result = await cursor.fetch_next
-            if result:
-                if not self._json:
-                    return self.model(**cursor.next_object())
+            loop = asyncio.get_event_loop()
+
+            async def _getitem():
+                cursor = self._connect.find(self._query).skip(index).limit(1)
+                result = await cursor.fetch_next
+                if result:
+                    if not self._json:
+                        return self._model(**cursor.next_object())
+                    else:
+                        return cursor.next_object()
                 else:
-                    return cursor.next_object()
-            else:
+                    return None
+            res = loop.run_until_complete(_getitem())
+            if res is None:
                 raise IndexError(index)
-        self.slice = index
+            return res
+        self._slice = index
         return self
 
     async def count(self):
-        return await self.connect.count_documents(self.query)
+        return await self._connect.count_documents(self._query)
 
     async def update(self, new_data):
-        await self.connect.update_many(self.query, {"$set": new_data})
+        await self._connect.update_many(self._query, {"$set": new_data})
 
     async def delete(self):
-        await self.connect.delete_many(self.query)
+        await self._connect.delete_many(self._query)
+
+    def sort(self, item):
+        if item[0] == "-":
+            self._sort = (item[1:len(item)], -1)
+        else:
+            self._sort = (item, 1)
+        return self
+
 
     def json(self):
         self._json = True

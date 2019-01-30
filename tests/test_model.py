@@ -21,110 +21,110 @@ DATABASES = {
 OLLOConnect.connect(DATABASES)
 
 
-# class TestModel(unittest.TestCase):
+class TestModel(unittest.TestCase):
 
-#     def setUp(self):
-#         self.loop = asyncio.get_event_loop()
-#         self.data = test_data[0]
-#         self.list_fields = ["index", "guid", "isActive", "name", "tags"]
+    def setUp(self):
+        self.loop = asyncio.get_event_loop()
+        self.data = test_data[0]
+        self.list_fields = ["index", "guid", "isActive", "name", "tags"]
 
-#     def test_fields(self):
+    def test_fields(self):
 
-#         async def _go():
-#             self.assertEqual(set(self.list_fields), set(Object2.field_names()))
+        async def _go():
+            self.assertEqual(set(self.list_fields), set(Object2.field_names()))
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-#     def test_required(self):
+    def test_required(self):
 
-#         async def _go():
-#             data = copy.deepcopy(self.data)
-#             del data[self.list_fields[0]]
-#             obj = Object2()
-#             obj(**data)
-#             with self.assertRaises(ValueError):
-#                 await obj.save()
+        async def _go():
+            data = copy.deepcopy(self.data)
+            del data[self.list_fields[0]]
+            obj = Object2()
+            obj(**data)
+            with self.assertRaises(ValueError):
+                await obj.save()
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-#     def test_type(self):
+    def test_type(self):
 
-#         async def _go():
-#             obj = Object3()
-#             for field in self.list_fields:
-#                 with self.assertRaises(FieldError):
-#                     setattr(obj, field, self.data[field])
+        async def _go():
+            obj = Object3()
+            for field in self.list_fields:
+                with self.assertRaises(FieldError):
+                    setattr(obj, field, self.data[field])
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-#     def test_save(self):
+    def test_save(self):
 
-#         async def _go():
-#             obj = Object2(**self.data)
-#             for key, value in self.data.items():
-#                 self.assertEqual(getattr(obj, key), value)
-#             await obj.save()
+        async def _go():
+            obj = Object2(**self.data)
+            for key, value in self.data.items():
+                self.assertEqual(getattr(obj, key), value)
+            await obj.save()
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
 
-# class TestDate(unittest.TestCase):
+class TestDate(unittest.TestCase):
 
-#     def setUp(self):
-#         self.loop = asyncio.get_event_loop()
-#         self.formats = {
-#             "no_format": [
-#                 "18-09-2018",
-#                 "18-09-2018 0:05:59",
-#             ],
-#             "date": [
-#                 "2018-09-18",
-#                 "2018-18-09",
-#                 "18-09-18",
-#             ],
-#             "datetime": [
-#                 "2018-09-18 12:15:33",
-#                 "2018-18-09 19:01:00",
-#                 "18-09-18 5:3:1",
-#             ]
-#         }
+    def setUp(self):
+        self.loop = asyncio.get_event_loop()
+        self.formats = {
+            "no_format": [
+                "18-09-2018",
+                "18-09-2018 0:05:59",
+            ],
+            "date": [
+                "2018-09-18",
+                "2018-18-09",
+                "18-09-18",
+            ],
+            "datetime": [
+                "2018-09-18 12:15:33",
+                "2018-18-09 19:01:00",
+                "18-09-18 5:3:1",
+            ]
+        }
 
-#     def test_date_raise(self):
+    def test_date_raise(self):
 
-#         async def _go():
-#             for key in self.formats["date"]:
-#                 obj = Object4()
-#                 with self.assertRaises(FieldError):
-#                     obj.date1 = key
+        async def _go():
+            for key in self.formats["date"]:
+                obj = Object4()
+                with self.assertRaises(FieldError):
+                    obj.date1 = key
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-#     def test_datetime_raise(self):
+    def test_datetime_raise(self):
 
-#         async def _go():
-#             for key in self.formats["datetime"]:
-#                 obj = Object4()
-#                 with self.assertRaises(FieldError):
-#                     obj.date2 = key
+        async def _go():
+            for key in self.formats["datetime"]:
+                obj = Object4()
+                with self.assertRaises(FieldError):
+                    obj.date2 = key
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-#     def test_date(self):
+    def test_date(self):
 
-#         async def _go():
-#             obj = Object4()
-#             obj.date1 = self.formats["no_format"][0]
-#             obj.date2 = self.formats["no_format"][1]
-#             self.assertEqual(
-#                 obj.date1,
-#                 datetime.strptime(self.formats["no_format"][0], "%d-%m-%Y").date()
-#             )
-#             self.assertEqual(
-#                 obj.date2,
-#                 datetime.strptime(self.formats["no_format"][1], "%d-%m-%Y %H:%M:%S")
-#             )
+        async def _go():
+            obj = Object4()
+            obj.date1 = self.formats["no_format"][0]
+            obj.date2 = self.formats["no_format"][1]
+            self.assertEqual(
+                obj.date1,
+                datetime.strptime(self.formats["no_format"][0], "%d-%m-%Y").date()
+            )
+            self.assertEqual(
+                obj.date2,
+                datetime.strptime(self.formats["no_format"][1], "%d-%m-%Y %H:%M:%S")
+            )
 
-#         self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
 
 class Test_F_Data(unittest.TestCase):
@@ -148,42 +148,42 @@ class Test_F_Data(unittest.TestCase):
             ]
         }
 
-    # def test_date_raise(self):
+    def test_date_raise(self):
 
-    #     async def _go():
-    #         for key in self.formats["date"]:
-    #             obj = Object5()
-    #             with self.assertRaises(FieldError):
-    #                 obj.date1 = key
+        async def _go():
+            for key in self.formats["date"]:
+                obj = Object5()
+                with self.assertRaises(FieldError):
+                    obj.date1 = key
 
-    #     self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-    # def test_datetime_raise(self):
+    def test_datetime_raise(self):
 
-    #     async def _go():
-    #         for key in self.formats["datetime"]:
-    #             obj = Object5()
-    #             with self.assertRaises(FieldError):
-    #                 obj.date2 = key
+        async def _go():
+            for key in self.formats["datetime"]:
+                obj = Object5()
+                with self.assertRaises(FieldError):
+                    obj.date2 = key
 
-    #     self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
-    # def test_date(self):
+    def test_date(self):
 
-    #     async def _go():
-    #         obj = Object5()
-    #         obj.date1 = self.formats["format"][0]
-    #         obj.date2 = self.formats["format"][1]
-    #         self.assertEqual(
-    #             obj.date1,
-    #             datetime.strptime(self.formats["format"][0], "%Y-%m-%d").date()
-    #         )
-    #         self.assertEqual(
-    #             obj.date2,
-    #             datetime.strptime(self.formats["format"][1], "%Y-%m-%d %H:%M:%S")
-    #         )
+        async def _go():
+            obj = Object5()
+            obj.date1 = self.formats["format"][0]
+            obj.date2 = self.formats["format"][1]
+            self.assertEqual(
+                obj.date1,
+                datetime.strptime(self.formats["format"][0], "%Y-%m-%d").date()
+            )
+            self.assertEqual(
+                obj.date2,
+                datetime.strptime(self.formats["format"][1], "%Y-%m-%d %H:%M:%S")
+            )
 
-    #     self.loop.run_until_complete(_go())
+        self.loop.run_until_complete(_go())
 
     def test_file(self):
         from collections import namedtuple

@@ -132,7 +132,7 @@ class DateField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._to_date = True
+        self._to_date = False
         self._format = "%d-%m-%Y"
         if kwargs.get("to_date"):
             self._to_date = bool(kwargs["to_date"])
@@ -153,7 +153,7 @@ class DateTimeField(Validate):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self._to_date = True
+        self._to_date = False
         self._format = "%d-%m-%Y %H:%M:%S"
         if kwargs.get("to_date"):
             self._to_date = bool(kwargs["to_date"])

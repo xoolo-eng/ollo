@@ -35,6 +35,7 @@ class BaseModel(type):
         super().__init__(name, bases, attr_dict)
         cls._required_fields = set()
         cls._default_fields = set()
+        cls._fields = set()
         for key, attr in attr_dict.items():
             if isinstance(attr, Validate):
                 attr.storage_name = key
@@ -74,6 +75,7 @@ class Base:
     
     def __init__(self, *args, **kwargs):
         self._null = False
+        self._changes = False
         try:
             kwargs["null"]
         except KeyError:
@@ -87,6 +89,14 @@ class Base:
             self._default = kwargs["default"]
         except KeyError:
             pass
+        try:
+            kwargs["choices"]
+        except KeyError:
+            pass
+        else:
+            if isinstance(kwargs["choices"], list) or \
+                    isinstance(kwargs["choices"], tuple):
+                self._changes = kwargs["choices"]
         self.storage_name = None
 
     def __get__(self, instance, owner):
@@ -105,14 +115,22 @@ class Base:
         if self._null:
             if value is not None:
                 if not isinstance(value, data_type):
-                     raise FieldError(
+                    raise FieldError(
                         f"Value <{self.storage_name}> must be "
                         f"{data_type} type or None"
+                    )
+                if self._changes and value not in self._changes:
+                    raise FieldError(
+                        f"Value <{self.storage_name}> must be in {self._changes}"
                     )
         else:
             if not isinstance(value, data_type):
                 raise FieldError(
                     f"Value <{self.storage_name}> must be {data_type} type"
+                )
+            if self._changes and value not in self._changes:
+                raise FieldError(
+                    f"Value <{self.storage_name}> must be in {self._changes}"
                 )
 
     # def _check_default(self, value, data_type):

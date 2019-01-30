@@ -1,3 +1,6 @@
+from functools import wraps
+
+
 class Event(object):
 
     instance = None
@@ -23,25 +26,25 @@ class Event(object):
     @classmethod
     def origin(self, name, post=False, asynchron=True):
 
-        def _wripper(funck):
-
-            def _executor(*args, **kwargs):
+        def _wripper(func):
+            @wraps(func)
+            def _executor(cls, *args, **kwargs):
                 if post:
-                    result = funck(*args, **kwargs)
+                    result = func(cls, *args, **kwargs)
                     self.occurence(name, *args, **kwargs)
                     return result
                 else:
                     self.occurence(name, *args, **kwargs)
-                    return funck(*args, **kwargs)
+                    return func(cls, *args, **kwargs)
 
-            async def _async_executor(*args, **kwargs):
+            async def _async_executor(cls, *args, **kwargs):
                 if post:
-                    result = await funck(*args, **kwargs)
+                    result = await func(cls, *args, **kwargs)
                     self.occurence(name, *args, **kwargs)
                     return result
                 else:
                     self.occurence(name, *args, **kwargs)
-                    return (await funck(*args, **kwargs))
+                    return (await func(cls, *args, **kwargs))
 
             if asynchron:
                 return _async_executor
