@@ -11,7 +11,7 @@ from ollo.models.fields import (
     DateField,
     DateTimeField,
     EmailField,
-    IpAddressField
+    IpAddressField,
 )
 from ollo.serializers.fields import FileField
 from ollo.serializers.serializer import Serializer, ModelSerializer

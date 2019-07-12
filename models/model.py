@@ -4,7 +4,6 @@ from ollo import events
 
 
 class Model(metaclass=BaseModel):
-
     def __setattr__(self, name, value):
         if name in self._required_fields:
             self._fields.add(name)
@@ -12,7 +11,7 @@ class Model(metaclass=BaseModel):
 
     def __init__(self, *args, **kwargs):
         # for obj in Model.__subclasses__():
-            # obj._fields = set()
+        # obj._fields = set()
         self._fields = set()
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
@@ -61,10 +60,7 @@ class Model(metaclass=BaseModel):
     async def save(self):
         self._check_fields()
         result = await self._changes._save_obj(
-            **{
-                key: getattr(self, key) \
-                for key in (self._fields | self._default_fields)
-            }
+            **{key: getattr(self, key) for key in (self._fields | self._default_fields)}
         )
         setattr(self, "_id", result)
         return result
@@ -96,14 +92,10 @@ class Model(metaclass=BaseModel):
     def values(self, *args, include=True):
         if len(args) > 0:
             if include:
-                return {
-                    key: getattr(self, key) \
-                    for key in self._fields if key in args
-                }
+                return {key: getattr(self, key) for key in self._fields if key in args}
             else:
                 return {
-                    key: getattr(self, key) \
-                    for key in self._fields if key not in args
+                    key: getattr(self, key) for key in self._fields if key not in args
                 }
         return {key: getattr(self, key) for key in self._fields}
 

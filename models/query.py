@@ -5,12 +5,10 @@ from bson.objectid import ObjectId
 
 
 class _SetQuery(QueryBase):
-
     def __init__(self, db, collection):
         super().__init__()
         self.db = db
         self.collection = collection
-
 
     async def _save_obj(self, **kwargs):
         if kwargs.get("_id"):
@@ -23,7 +21,9 @@ class _SetQuery(QueryBase):
             return res.inserted_id
 
     async def _update_obj(self, _id, **kwargs):
-        res = await self._bases[self.db][self.collection].update_one({"_id": _id}, {"$set": kwargs})
+        res = await self._bases[self.db][self.collection].update_one(
+            {"_id": _id}, {"$set": kwargs}
+        )
         return res.modified_count
 
     async def _delete_obj(self, _id):
@@ -32,7 +32,6 @@ class _SetQuery(QueryBase):
 
 
 class GetQuery(QueryBase):
-
     def _iscomplex(self, key):
         for pattern in self.patterns:
             if re.match(pattern, key):
@@ -62,24 +61,21 @@ class GetQuery(QueryBase):
         query = self._parse_query(kwargs)
         res = await self._bases[self.db][self.collection].find_one(query)
         if not res:
-            raise self.model.DoesNotExist(f"{self.model.__name__} "
-                "matching query does not exist")
+            raise self.model.DoesNotExist(
+                f"{self.model.__name__} " "matching query does not exist"
+            )
         return self.model(**res)
 
     def all(self, **kwargs):
         return CollectionSet(
-            connect=self._bases[self.db][self.collection],
-            query={},
-            model=self.model
+            connect=self._bases[self.db][self.collection], query={}, model=self.model
         )
 
     def filter(self, **kwargs):
         query = dict()
         query = self._parse_query(kwargs)
         return CollectionSet(
-            connect=self._bases[self.db][self.collection],
-            query=query,
-            model=self.model
+            connect=self._bases[self.db][self.collection], query=query, model=self.model
         )
 
     def _parse_query(self, obj):
@@ -93,9 +89,7 @@ class GetQuery(QueryBase):
                             f"${key_condition[1]}": sub_value
                         }
                 else:
-                    query[key_condition[0]] = {
-                        f"${key_condition[1]}": value
-                    }
+                    query[key_condition[0]] = {f"${key_condition[1]}": value}
             else:
                 if isinstance(value, dict):
                     for sub_key, sub_value in value.items():
@@ -109,8 +103,7 @@ class GetQuery(QueryBase):
         pass
 
 
-class CollectionSet():
-
+class CollectionSet:
     def __init__(self, *args, **kwargs):
         self._json = False
         self._bson = True
@@ -124,10 +117,11 @@ class CollectionSet():
         if self._slice is None:
             self.cursor = self._connect.find(self._query).sort(*self._sort)
         else:
-            self.cursor = self._connect.find(
-                self._query).sort(*self._sort).skip(
-                self._slice.start).limit(
-                self._slice.stop - self._slice.start
+            self.cursor = (
+                self._connect.find(self._query)
+                .sort(*self._sort)
+                .skip(self._slice.start)
+                .limit(self._slice.stop - self._slice.start)
             )
         return self
 
@@ -158,6 +152,7 @@ class CollectionSet():
                         return cursor.next_object()
                 else:
                     return None
+
             res = loop.run_until_complete(_getitem())
             if res is None:
                 raise IndexError(index)
@@ -176,11 +171,10 @@ class CollectionSet():
 
     def sort(self, item):
         if item[0] == "-":
-            self._sort = (item[1:len(item)], -1)
+            self._sort = (item[1 : len(item)], -1)
         else:
             self._sort = (item, 1)
         return self
-
 
     def json(self):
         self._json = True

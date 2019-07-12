@@ -25,7 +25,6 @@ class Event(object):
 
     @classmethod
     def origin(self, name, post=False, asynchron=True):
-
         def _wripper(func):
             @wraps(func)
             def _executor(cls, *args, **kwargs):
@@ -44,12 +43,13 @@ class Event(object):
                     return result
                 else:
                     self.occurence(name, *args, **kwargs)
-                    return (await func(cls, *args, **kwargs))
+                    return await func(cls, *args, **kwargs)
 
             if asynchron:
                 return _async_executor
             else:
                 return _executor
+
         return _wripper
 
     def register(self, name, callback):

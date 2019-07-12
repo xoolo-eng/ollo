@@ -8,6 +8,7 @@ class FieldError(Exception):
 
 class ConnectMeta(type):
     """Metaclass for connection."""
+
     def __init__(cls, name, bases, attr_dict):
         super().__init__(name, bases, attr_dict)
 
@@ -20,8 +21,7 @@ class QueryBase(metaclass=ConnectMeta):
     def connect(cls, databases):
         for db in databases.keys():
             cls._connections[db] = ma.AsyncIOMotorClient(
-                databases[db]["HOST"],
-                databases[db]["PORT"]
+                databases[db]["HOST"], databases[db]["PORT"]
             )
             cls._bases[db] = cls._connections[db][databases[db]["NAME"]]
 
@@ -30,7 +30,6 @@ from .query import _SetQuery, GetQuery
 
 
 class BaseModel(type):
-
     def __init__(cls, name, bases, attr_dict):
         super().__init__(name, bases, attr_dict)
         cls._required_fields = set()
@@ -42,11 +41,7 @@ class BaseModel(type):
                 cls._required_fields.add(key)
                 if hasattr(attr, "_default") and attr._default is not None:
                     cls._default_fields.add(key)
-        cls._meta = {
-            "db": "default",
-            "collection": None,
-            "abstract": False
-        }
+        cls._meta = {"db": "default", "collection": None, "abstract": False}
         try:
             cls._meta["db"] = cls.Meta.db
         except AttributeError:
@@ -60,19 +55,11 @@ class BaseModel(type):
         except AttributeError:
             cls._meta["collection"] = f"{name}__collection"
         if not cls._meta["abstract"]:
-            cls.query = GetQuery(
-                cls._meta["db"],
-                cls._meta["collection"],
-                cls
-            )
-            cls._changes = _SetQuery(
-                cls._meta["db"],
-                cls._meta["collection"]
-            )
+            cls.query = GetQuery(cls._meta["db"], cls._meta["collection"], cls)
+            cls._changes = _SetQuery(cls._meta["db"], cls._meta["collection"])
 
 
 class Base:
-    
     def __init__(self, *args, **kwargs):
         self._null = False
         self._changes = False
@@ -94,8 +81,9 @@ class Base:
         except KeyError:
             pass
         else:
-            if isinstance(kwargs["choices"], list) or \
-                    isinstance(kwargs["choices"], tuple):
+            if isinstance(kwargs["choices"], list) or isinstance(
+                kwargs["choices"], tuple
+            ):
                 self._changes = kwargs["choices"]
         self.storage_name = None
 
@@ -143,7 +131,6 @@ class Base:
 
 
 class Validate(ABC, Base):
-
     def __set__(self, instance, value):
         value = self.validate(instance, value)
         super().__set__(instance, value)

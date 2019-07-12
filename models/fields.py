@@ -9,11 +9,11 @@ from collections import namedtuple
 from bson.objectid import ObjectId
 from datetime import datetime, date
 from concurrent.futures import ThreadPoolExecutor
-from ollo import events
+
+# from ollo import events
 
 
 class StringField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._max_length = None
@@ -21,9 +21,7 @@ class StringField(Validate):
             if isunsignedint(kwargs.get("max_length")):
                 self._max_length = kwargs["max_length"]
             else:
-                raise ValueError(
-                    "<max_length>: expected int value greater than zero"
-                )
+                raise ValueError("<max_length>: expected int value greater than zero")
 
     def validate(self, instance, value=None):
         self._check_type(value, str)
@@ -48,7 +46,6 @@ class SymbolField(StringField):
 
 
 class IntegerField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -58,7 +55,6 @@ class IntegerField(Validate):
 
 
 class FooatField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -68,7 +64,6 @@ class FooatField(Validate):
 
 
 class BooleanField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -78,7 +73,6 @@ class BooleanField(Validate):
 
 
 class ArrayField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -88,7 +82,6 @@ class ArrayField(Validate):
 
 
 class ObjectField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -98,7 +91,6 @@ class ObjectField(Validate):
 
 
 class ObjectIdField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -108,7 +100,6 @@ class ObjectIdField(Validate):
 
 
 class BinaryDataField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         if kwargs.get("max_length"):
@@ -129,7 +120,6 @@ class BinaryDataField(Validate):
 
 
 class DateField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._to_date = False
@@ -150,7 +140,6 @@ class DateField(Validate):
 
 
 class DateTimeField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._to_date = False
@@ -171,7 +160,6 @@ class DateTimeField(Validate):
 
 
 class FileField(Validate):
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._upload_to = kwargs["upload_to"]
@@ -184,6 +172,7 @@ class FileField(Validate):
 
     def _save(self, *args, **kwargs):
         if self._file:
+
             def save_file(file, path, name):
                 result = None
                 with open(os.path.join(path, name), "wb") as new_file:
@@ -196,7 +185,7 @@ class FileField(Validate):
                     save_file,
                     self._file,
                     self._upload_to,
-                    self._filename or self._file.name.split("/")[-1]
+                    self._filename or self._file.name.split("/")[-1],
                 )
 
     def validate(self, instance, value=None):
@@ -218,10 +207,7 @@ class FileField(Validate):
                     os.makedirs(self._upload_to)
                 if self._filename:
                     filename = f"{self._filename}.{filename.split('.')[-1]}"
-                value = os.path.join(
-                    self._upload_to,
-                    filename
-                )
+                value = os.path.join(self._upload_to, filename)
         return value
 
 
@@ -260,7 +246,7 @@ fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]{1,}|::(ffff(:0{1,4}){0,1}:){0,1}\
         super().__init__(*args, **kwargs)
         self._version = kwargs.get("version") or "ipv4"
         if self._version not in ["ipv4", "ipv6"]:
-            raise ValueError("<version>: must be \"ipv4\" or \"ipv6\"")
+            raise ValueError('<version>: must be "ipv4" or "ipv6"')
         self._max_length = 15 if self._version == "ipv4" else 39
         self._pattern = re.compile(
             kwargs.get("pattern") or self.IPV4 if self._version == "ipv4" else self.IPV6

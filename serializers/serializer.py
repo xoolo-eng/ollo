@@ -3,7 +3,6 @@ from copy import deepcopy
 
 
 class Serializer(metaclass=BaseSerializer):
-
     class ValidateError(Exception):
         pass
 
@@ -13,7 +12,7 @@ class Serializer(metaclass=BaseSerializer):
 
     def __init__(self, *args, **kwargs):
         # for cls in Serializer.__subclasses__():
-            # cls._fields = set()
+        # cls._fields = set()
         self._fields = set()
         for arg in args:
             for key, value in arg.items():
@@ -46,7 +45,7 @@ class Serializer(metaclass=BaseSerializer):
         validate_funcs = dict()
         for key in self._fields:
             try:
-                validate_funcs[key] = (getattr(self, f"validate_{key}"))
+                validate_funcs[key] = getattr(self, f"validate_{key}")
             except AttributeError:
                 pass
         for key in validate_funcs:
@@ -55,9 +54,7 @@ class Serializer(metaclass=BaseSerializer):
             except self.ValidateError as e:
                 self.errors[key] = str(e)
         try:
-            await self.validate(
-                {key: getattr(self, key) for key in self._fields}
-            )
+            await self.validate({key: getattr(self, key) for key in self._fields})
         except AttributeError:
             pass
         except self.ValidateError as e:

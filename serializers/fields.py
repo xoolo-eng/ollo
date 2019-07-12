@@ -3,12 +3,12 @@ from ollo.models.base import FieldError
 
 
 class FileField(_FF):
-
     def __get__(self, instance, owner):
         return super().__get__(instance, owner)
 
     def validate(self, instance, value):
         try:
+            # Написать все через метод проверки наличия аттрибута
             _ = value.filename
             _ = value.file
             _ = value.content_type
