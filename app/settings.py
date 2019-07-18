@@ -52,7 +52,8 @@ __default_settints = {
     "DEBUG": True,
     "HOST": "localhost",
     "PORT": 8008,
-    "BASE_DIR": os.environ["PWD"]
+    "BASE_DIR": os.environ["PWD"],
+    "MIDDLEWARES": []
 }
 
 settings = Settings(**__default_settints)
