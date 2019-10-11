@@ -29,12 +29,9 @@ class Application(metaclass=base.__BaseSingleton):
         self.settings = Settings(
             **kwargs, LOG=logging.getLogger(app_name)
         )
-        self.is_work = False
         self.run()
 
     def run(self):
-        if self.is_work:
-            return
 
         async def on_shutdown(app):
             for ws in app["websockets"]:
