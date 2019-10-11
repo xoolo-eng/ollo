@@ -1,6 +1,7 @@
 from .base import BaseModel
-import os
 from ollo import events
+
+__all__ = ("Model",)
 
 
 class Model(metaclass=BaseModel):
@@ -10,8 +11,6 @@ class Model(metaclass=BaseModel):
         super().__setattr__(name, value)
 
     def __init__(self, *args, **kwargs):
-        # for obj in Model.__subclasses__():
-        # obj._fields = set()
         self._fields = set()
         if len(kwargs) > 0:
             self.__call__(*args, **kwargs)
@@ -20,7 +19,6 @@ class Model(metaclass=BaseModel):
     def __call__(self, *args, **kwargs):
         for key, value in kwargs.items():
             setattr(self, key, value)
-            # self._fields.add(key)
 
     def __setitem__(self, key, value):
         setattr(self, key, value)

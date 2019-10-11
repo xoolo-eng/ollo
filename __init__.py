@@ -1,1 +1,1 @@
-from .models.base import QueryBase as OLLOConnect 
+from .models.base import QueryBase as OLLOConnect

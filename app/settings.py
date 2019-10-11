@@ -2,7 +2,6 @@ from ollo import base
 import os
 
 
-
 class __BaseSettings(base.__BaseSingleton):
     def __call__(cls, *args, **kwargs):
         result = super().__call__(*args, **kwargs)

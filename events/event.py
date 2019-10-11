@@ -16,41 +16,41 @@ class Event(object):
         return cls.instance
 
     @classmethod
-    def occurence(self, name, *args, **kwargs):
+    def occurence(cls, name, *args, **kwargs):
         try:
-            for callback in self.callbacks[name]:
+            for callback in cls.callbacks[name]:
                 callback(*args, **kwargs)
         except KeyError:
             pass
 
     @classmethod
-    def origin(self, name, post=False, asynchron=True):
-        def _wripper(func):
+    def origin(cls, name, post=False, asynchron=True):
+        def _wrapper(func):
             @wraps(func)
-            def _executor(cls, *args, **kwargs):
+            def _executor(self, *args, **kwargs):
                 if post:
-                    result = func(cls, *args, **kwargs)
-                    self.occurence(name, *args, **kwargs)
+                    result = func(self, *args, **kwargs)
+                    cls.occurence(name, *args, **kwargs)
                     return result
                 else:
-                    self.occurence(name, *args, **kwargs)
-                    return func(cls, *args, **kwargs)
+                    cls.occurence(name, *args, **kwargs)
+                    return func(self, *args, **kwargs)
 
-            async def _async_executor(cls, *args, **kwargs):
+            async def _async_executor(self, *args, **kwargs):
                 if post:
-                    result = await func(cls, *args, **kwargs)
+                    result = await func(self, *args, **kwargs)
                     self.occurence(name, *args, **kwargs)
                     return result
                 else:
                     self.occurence(name, *args, **kwargs)
-                    return await func(cls, *args, **kwargs)
+                    return await func(self, *args, **kwargs)
 
             if asynchron:
                 return _async_executor
             else:
                 return _executor
 
-        return _wripper
+        return _wrapper
 
     def register(self, name, callback):
         if self.callbacks.get(name) is None:

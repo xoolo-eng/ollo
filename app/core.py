@@ -29,12 +29,9 @@ class Application(metaclass=base.__BaseSingleton):
         self.settings = Settings(
             **kwargs, LOG=logging.getLogger(app_name)
         )
-        self.is_work = False
         self.run()
 
     def run(self):
-        if self.is_work:
-            return
 
         async def on_shutdown(app):
             for ws in app["websockets"]:
@@ -70,8 +67,8 @@ class Application(metaclass=base.__BaseSingleton):
                     [
                         os.path.join(path, "templates")
                         for path in os.listdir(self.settings.base_dir)
-                        if os.path.isdir(path)
-                        and os.path.isdir(os.path.join(path, "templates"))
+                        if os.path.isdir(path) and
+                        os.path.isdir(os.path.join(path, "templates"))
                     ]
                 ),
             )
