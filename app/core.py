@@ -70,8 +70,8 @@ class Application(metaclass=base.__BaseSingleton):
                     [
                         os.path.join(path, "templates")
                         for path in os.listdir(self.settings.base_dir)
-                        if os.path.isdir(path)
-                        and os.path.isdir(os.path.join(path, "templates"))
+                        if os.path.isdir(path) and
+                        os.path.isdir(os.path.join(path, "templates"))
                     ]
                 ),
             )
